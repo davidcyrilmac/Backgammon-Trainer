@@ -1,26 +1,35 @@
-[app]
-title = Backgammon Best Move
-package.name = bgbestmove
-package.domain = org.thehighlander
+name: Build APK
+on:
+  push:
+  workflow_dispatch:
 
-source.dir = .
-source.include_exts = py,json
-source.exclude_patterns = test_*.py,train.py,arena.py,snap_*.json
-
-version = 0.1
-
-# Only Python + Kivy. bgengine.py uses nothing outside the standard library.
-# Versions match the combination that built successfully for the rolexwatch app.
-requirements = python3==3.11.5,hostpython3==3.11.5,kivy==2.3.1
-
-orientation = portrait
-fullscreen = 0
-
-android.archs = arm64-v8a
-android.api = 33
-android.minapi = 24
-android.accept_sdk_license = True
-
-[buildozer]
-log_level = 2
-warn_on_root = 1
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: System packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git zip unzip autoconf libtool \
+            pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 \
+            cmake libffi-dev libssl-dev
+      - name: Python packages
+        run: |
+          python -m pip install --upgrade pip
+          pip install buildozer "cython<3"
+      - name: Show Java version
+        run: java -version && echo "JAVA_HOME=$JAVA_HOME"
+      - name: Build debug APK
+        run: buildozer -v android debug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bgbestmove-apk
+          path: bin/*.apk
