@@ -317,8 +317,11 @@ class BoardView(Widget):
     def on_touch_down(self, touch):
         if not self.collide_point(*touch.pos):
             return super().on_touch_down(touch)
-        # ignore right-click / scroll-wheel events from a desktop mouse
-        if getattr(touch, "button", "left") != "left":
+        # ignore right-click / scroll-wheel events from a desktop mouse;
+        # finger touches on a phone carry no (or an odd) button name
+        if getattr(touch, "button", None) in (
+                "right", "middle", "scrollup", "scrolldown", "scrollleft",
+                "scrollright"):
             return False
         x0, y0, w, h, m, cw = self._geom()
         col = int((touch.x - x0) // cw)
@@ -384,12 +387,12 @@ class BGApp(App):
                                     state="down", allow_no_selection=False)
         self.t_red = ToggleButton(text="Red", group="side",
                                   allow_no_selection=False)
-        self.t_add = ToggleButton(text="Add", group="mode", state="down",
+        self.t_add = ToggleButton(text="Add", group="mode",
                                   allow_no_selection=False)
         self.t_rem = ToggleButton(text="Remove", group="mode",
                                   allow_no_selection=False)
-        self.t_move = ToggleButton(text="Move", group="mode",
-                                   allow_no_selection=False)
+        self.t_move = ToggleButton(text="Move", group="mode", state="down",
+                                   allow_no_selection=False)   # default
         for b in (self.t_light, self.t_red, self.t_add, self.t_rem,
                   self.t_move):
             row.add_widget(b)
